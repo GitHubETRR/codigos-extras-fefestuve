@@ -1,4 +1,3 @@
-//El código funciona, pero cada vez que debería poner 00 pone un solo 0.
 #include <stdio.h>
 
 typedef union numero{
@@ -14,6 +13,6 @@ int main(void){
     unsigned char *puntero = &num.caracter;
 
     for(int i = 3; i>=0; i--, puntero--){
-        printf("%X", *puntero);
+        printf("%02X", *puntero);
     }
 }
