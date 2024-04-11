@@ -11,8 +11,9 @@ int main(void){
     scanf("%f", &num.flotante);
 
     unsigned char *puntero = &num.caracter;
-
-    for(int i = 3; i>=0; i--, puntero--){
-        printf("%02X", *puntero);
+    printf("El float esta guardado en la memoria como 0x");
+    
+    for(int i=3; i>=0; i--){
+        printf("%02X", *(puntero+i));
     }
 }
