@@ -65,8 +65,8 @@ union numeros ingresar_numero(union numeros numero){
 
 void print_numero(union numeros numero){
     printf("El numero ingresado esta guardado en la memoria como: 0x");
-    for(int i = 4; i>0; i--){
-        printf("%X", numero.vect[i]);
+    for(int i = 3; i>=0; i--){
+        printf("%02X", numero.vect[i]);
     }
     printf(" en hexadecimal\n");
 
@@ -77,8 +77,8 @@ void print_numero(union numeros numero){
         printf("El signo es negativo\n");
     }
 
-    printf("La mantisa es %X\n",numero.bits.mantisa);
-    printf("El exponente es %X\n", numero.bits.exponente-127);
+    printf("La mantisa es 0x%02X\n",numero.bits.mantisa);
+    printf("El exponente es %d\n", numero.bits.exponente-127);
     printf("El numero ingresado fue %f\n", numero.var);
     
 }
