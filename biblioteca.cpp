@@ -106,6 +106,7 @@ public:
     }
 
     void prestarLibro() {
+        bool encontrado=false;
         string usuarioID, libroID;
         cout<<"Usuario ID:"<<endl;
         cin>>usuarioID;
@@ -114,17 +115,29 @@ public:
 
         for (int i=0; i<usuarios.size(); i++) {
             if (usuarios[i].IDusuario == usuarioID) {
+                encontrado=true;
                 usuarios[i].prestarLibro(libroID);
+                break;
             }
         }
-        for (int i=0; i<catalogo.size(); i++) {
-            if (catalogo[i].identificacion == libroID) {
-                catalogo[i].prestarLibro();
+        if(encontrado){
+            for (int i=0, encontrado=false; i<catalogo.size(); i++) {
+                if (catalogo[i].identificacion == libroID) {
+                    encontrado=true;
+                    catalogo[i].prestarLibro();
+                    break;
+                }
             }
+            if(!encontrado){
+                cout<<"Libro no encontrado"<<endl;
+            }
+        }else{
+            cout<<"Usuario no encontrado"<<endl;
         }
     }
 
     void devolverLibro(){
+        bool encontrado=false;
         string usuarioID, libroID;
         cout<<"Usuario ID:"<<endl;
         cin>>usuarioID;
@@ -133,15 +146,24 @@ public:
 
         for (int i=0; i<usuarios.size(); i++) {
             if (usuarios[i].IDusuario == usuarioID) {
+                encontrado=true;
                 usuarios[i].devolverLibro(libroID);
                 break;
             }
         }
-        for (int i=0; i<catalogo.size(); i++) {
-            if (catalogo[i].identificacion == libroID) {
-                catalogo[i].devolverLibro();
-             break;
+        if(encontrado){
+            for (int i=0, encontrado=false; i<catalogo.size(); i++) {
+                if (catalogo[i].identificacion == libroID) {
+                    encontrado=true;
+                    catalogo[i].devolverLibro();
+                    break;
+                }
             }
+            if(!encontrado){
+            cout<<"Libro no encontrado"<<endl;
+            }
+        }else{
+            cout<<"Usuario no encontrado"<<endl;
         }
     }
 
