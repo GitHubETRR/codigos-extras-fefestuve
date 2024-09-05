@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
 
 using namespace std;
 
@@ -11,32 +12,57 @@ public:
     string identificacion;
     int cantidad;
 
-    libro(string t, string a, string ID, int c){ 
+    libro(string t, string a, string ID, int c){
         titulo=t;
         autor=a;
         identificacion=ID;
         cantidad=c;
     }
 
-    void mostrarInfo() {
+    virtual void mostrarInfo() {
         cout << "\nTitulo: " << titulo << endl;
         cout << "   Autor: " << autor << endl;
         cout << "   Identificacion: " << identificacion << endl;
         cout << "   Cantidad disponible: " << cantidad << endl;
     }
 
-    bool prestarLibro() {
+    virtual void prestarLibro() {
         if (cantidad > 0) {
             cantidad--;
-            return true;
         } else {
             cout << "No hay ejemplares disponibles para prestar." << endl;
-            return false;
         }
     }
 
-    void devolverLibro() {
+    virtual void devolverLibro() {
         cantidad++;
+    }
+};
+//esto es herencia
+class libroDigital : public libro {
+public:
+    float MB;   // Tamaño del libro en MB
+    string formato;   // Formato del libro
+
+    //para el constructor este, tengo que usar el constructor de libro en la misma linea
+    libroDigital(string t, string a, string ID, int c, float tam, string form) : libro(t, a, ID, c){
+        MB=tam;
+        formato=form;
+    }
+
+    // uso override como para modificar el metodo original
+    void mostrarInfo() override {
+        libro::mostrarInfo();  // Llamar al metodo base para mostrar lo que tienen en comun
+        cout << "   Tamanio: " << MB << " MB" << endl;
+        cout << "   Formato: " << formato << endl;
+    }
+
+    void prestarLibro() override {
+        cout << "Compartiendo el libro digital" << endl;
+    }
+
+    void devolverLibro() override {
+        cout << "Devolviendo el libro digital" << endl;
     }
 };
 
@@ -56,9 +82,10 @@ public:
     }
 
     void devolverLibro(string libroID) {
-        for(int i = 0; i<librosPrestados.size(); i++){
-            if(librosPrestados[i]==libroID){
-                librosPrestados.erase(librosPrestados.begin()+i);
+        for (int i = 0; i < librosPrestados.size(); i++) {
+            if (librosPrestados[i] == libroID) {
+                librosPrestados.erase(librosPrestados.begin() + i);
+                break;
             }
         }
     }
@@ -67,123 +94,153 @@ public:
         cout << "\nNombre: " << nombre << endl;
         cout << "Identificacion de usuario: " << IDusuario << endl;
         cout << "Libros prestados: ";
-        for(int i=0; i<librosPrestados.size(); i++){
-            cout<<librosPrestados[i];
+        for (int i = 0; i < librosPrestados.size(); i++) {
+            cout << librosPrestados[i] << " ";
         }
-        cout<<endl;
+        cout << endl;
     }
 };
 
 class biblioteca {
 public:
-    vector<libro> catalogo;
+    vector<libro*> catalogo;  // uso punteros para que haya polimorfismo
     vector<usuario> usuarios;
+
+    void importarLibro(){
+        fstream archivo("Libros.txt", ios::in);
+        if(!archivo.is_open()){
+            cout<<"No se pudo abrir el archivo de libros"<<endl;
+            return;
+        }
+        string tipo, nombre, autor, ID;
+
+        while(archivo.good()){
+            getline(archivo, tipo);
+            getline(archivo, nombre);
+            getline(archivo, autor);
+            getline(archivo, ID);
+            if(tipo=="fisico"){
+                int cant;
+                archivo>>cant;
+                archivo.ignore();
+                catalogo.push_back(new libro(nombre, autor, ID, cant));
+            }else if(tipo=="digital"){
+                int MB;
+                string formato;
+                archivo>>MB;
+                archivo.ignore();
+                getline(archivo, formato);
+                catalogo.push_back(new libroDigital(nombre, autor, ID, 1, MB, formato));
+            }
+            archivo.ignore();
+        }
+
+    }
 
     void agregarLibro() {
         string nombre, autor, ID;
-        int cantidad;
-        cout<<"\nNombre del libro: "<<endl;
-        cin>>nombre;
-        cout<<"Autor: "<<endl;
-        cin>>autor;
-        cout<<"Identificacion del libro: "<<endl;
-        cin>>ID;
-        cout<<"Cantidad: "<<endl;
-        cin>>cantidad;
-        libro nuevoLibro(nombre, autor, ID, cantidad);
-        catalogo.push_back(nuevoLibro);
+        int cantidad, opcion;
+        cout << "\nTipo de libro:\n1. Fisico\n2. Digital" << endl;
+        cin >> opcion;
+        cin.ignore();
+        
+        cout << "Nombre del libro: " << endl;
+        getline(cin, nombre);
+        cout << "Autor: " << endl;
+        getline(cin, autor);
+        cout << "Identificacion del libro: " << endl;
+        cin >> ID;
+
+        if (opcion == 1) {
+            cout << "Cantidad: " << endl;
+            cin >> cantidad;
+            catalogo.push_back(new libro(nombre, autor, ID, cantidad));
+        } 
+        
+        if (opcion == 2) {
+            float MB;
+            string formato;
+            cout << "Tamanio en MB: " << endl;
+            cin >> MB;
+            cout << "Formato: " << endl;
+            cin >> formato;
+            catalogo.push_back(new libroDigital(nombre, autor, ID, 1, MB, formato));
+        }
     }
 
     void registrarUsuario() {
         string nombre, ID;
-        cout<<"\nNombre: "<<endl;
-        cin>>nombre;
-        cout<<"ID del usuario: "<<endl;
-        cin>>ID;
-        usuario nuevoUsuario(nombre, ID);
-        usuarios.push_back(nuevoUsuario);
-        cout<<"Registrado con exito"<<endl<<endl;
+        cin.ignore();
+        cout << "\nNombre: " << endl;
+        getline(cin, nombre);
+        cout << "ID del usuario: " << endl;
+        cin >> ID;
+        usuarios.push_back(usuario(nombre, ID));
+        cout << "Registrado con exito" << endl << endl;
     }
 
     void prestarLibro() {
-        bool encontrado=false;
         string usuarioID, libroID;
-        cout<<"Usuario ID:"<<endl;
-        cin>>usuarioID;
-        cout<<"Libro ID: "<<endl;
-        cin>>libroID;
+        cout << "Usuario ID: " << endl;
+        cin >> usuarioID;
+        cout << "Libro ID: " << endl;
+        cin >> libroID;
 
-        for (int i=0; i<usuarios.size(); i++) {
+        for (int i = 0; i < usuarios.size(); i++) {
             if (usuarios[i].IDusuario == usuarioID) {
-                encontrado=true;
                 usuarios[i].prestarLibro(libroID);
-                break;
-            }
-        }
-        if(encontrado){
-            for (int i=0, encontrado=false; i<catalogo.size(); i++) {
-                if (catalogo[i].identificacion == libroID) {
-                    encontrado=true;
-                    catalogo[i].prestarLibro();
-                    break;
+                for (int j = 0; j < catalogo.size(); j++) {
+                    if (catalogo[j]->identificacion == libroID) {
+                        catalogo[j]->prestarLibro();
+                        return;
+                    }
                 }
             }
-            if(!encontrado){
-                cout<<"Libro no encontrado"<<endl;
-            }
-        }else{
-            cout<<"Usuario no encontrado"<<endl;
         }
+        cout << "Usuario o libro no encontrado." << endl;
     }
 
-    void devolverLibro(){
-        bool encontrado=false;
+    void devolverLibro() {
         string usuarioID, libroID;
-        cout<<"Usuario ID:"<<endl;
-        cin>>usuarioID;
-        cout<<"Libro ID: "<<endl;
-        cin>>libroID;
+        cout << "Usuario ID: " << endl;
+        cin >> usuarioID;
+        cout << "Libro ID: " << endl;
+        cin >> libroID;
 
-        for (int i=0; i<usuarios.size(); i++) {
+        for (int i = 0; i < usuarios.size(); i++) {
             if (usuarios[i].IDusuario == usuarioID) {
-                encontrado=true;
                 usuarios[i].devolverLibro(libroID);
-                break;
-            }
-        }
-        if(encontrado){
-            for (int i=0, encontrado=false; i<catalogo.size(); i++) {
-                if (catalogo[i].identificacion == libroID) {
-                    encontrado=true;
-                    catalogo[i].devolverLibro();
-                    break;
+                for (int j = 0; j < catalogo.size(); j++) {
+                    if (catalogo[j]->identificacion == libroID) {
+                        catalogo[j]->devolverLibro();
+                        return;
+                    }
                 }
             }
-            if(!encontrado){
-            cout<<"Libro no encontrado"<<endl;
-            }
-        }else{
-            cout<<"Usuario no encontrado"<<endl;
         }
+        cout << "Usuario o libro no encontrado." << endl;
     }
 
     void mostrarCatalogo() {
-        //terminar
-        cout<<"-----------------------"<<endl;
-        for(int i=0; i<catalogo.size(); i++){
-            catalogo[i].mostrarInfo();
+        cout << "-----------------------" << endl;
+        for (int i = 0; i < catalogo.size(); i++) {
+            catalogo[i]->mostrarInfo();
         }
-        cout<<"-----------------------"<<endl;
-        
+        cout << "-----------------------" << endl;
     }
 
     void mostrarUsuarios() {
-        //terminar
-        cout<<"-----------------------"<<endl;
-        for(int i=0; i<usuarios.size(); i++){
+        cout << "-----------------------" << endl;
+        for (int i = 0; i < usuarios.size(); i++) {
             usuarios[i].mostrarInfo();
         }
-        cout<<"-----------------------"<<endl<<endl;
+        cout << "-----------------------" << endl << endl;
+    }
+
+    ~biblioteca(){
+        for(int i=0; i<catalogo.size();i++){
+            delete catalogo[i];
+        }
     }
 };
 
@@ -196,7 +253,7 @@ int menu() {
         cout << "3. Prestar libro" << endl;
         cout << "4. Devolver libro" << endl;
         cout << "5. Registrar usuario" << endl;
-        cout << "6. Registrar nuevo libro" <<endl;
+        cout << "6. Registrar nuevo libro" << endl;
         cout << "7. Salir" << endl;
         cout << "Elige una opcion: ";
         cin >> opcion;
@@ -207,6 +264,9 @@ int menu() {
 
 int main() {
     biblioteca miBiblioteca;
+
+    miBiblioteca.importarLibro();
+
     int opcion;
     do {
         opcion = menu();
@@ -217,18 +277,15 @@ int main() {
             case 2:
                 miBiblioteca.mostrarUsuarios();
                 break;
-            case 3: 
+            case 3:
                 miBiblioteca.prestarLibro();
                 break;
-
-            case 4: 
+            case 4:
                 miBiblioteca.devolverLibro();
                 break;
-            
             case 5:
                 miBiblioteca.registrarUsuario();
                 break;
-
             case 6:
                 miBiblioteca.agregarLibro();
                 break;
